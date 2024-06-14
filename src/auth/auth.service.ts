@@ -1,26 +1,77 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { AuthLoginDto } from './dto/auth-login.dto';
+import { JwtService } from '@nestjs/jwt';
+import { AuthRegisterDto } from './dto/auth-register.dto';
+import { AuthForgetDto } from './dto/auth-forget.dto';
+import { AuthResetDto } from './dto/auth-reset.dto';
+import { AuthRepository } from './repositories/auth.repository';
+import { UnauthorizedError } from 'src/common/errors/types/UnauthorizedError';
+import { UserEntity } from 'src/users/doamin/entities/user.entity';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly repository: AuthRepository,
+  ) {}
+
+  async createToken(user: UserEntity) {
+    try {
+      const accessToken = this.jwtService.sign(
+        {
+          name: user.name,
+          email: user.email,
+        },
+        {
+          expiresIn: '7d',
+          subject: user.id as string,
+        },
+      );
+
+      return {
+        accessToken,
+      };
+    } catch (error) {
+      throw new UnauthorizedError(error.message);
+    }
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  checkToken(token: string) {
+    try {
+      const tokenData = this.jwtService.verify(token, {
+        ignoreExpiration: false,
+      });
+      return tokenData;
+    } catch (error) {
+      throw new UnauthorizedError(error.message);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
+  isValidToken(token: string) {
+    try {
+      this.jwtService.verify(token);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
+  async login(authLoginDto: AuthLoginDto) {
+    const user = await this.repository.login(authLoginDto);
+    return this.createToken(user);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  async register(authRegisterDto: AuthRegisterDto) {
+    const user = await this.repository.register(authRegisterDto);
+    return this.createToken(user);
+  }
+
+  async forget(authForgetDto: AuthForgetDto) {
+    console.log(authForgetDto);
+    // return this.jwtService.sign();
+  }
+
+  async reset(authResetDto: AuthResetDto) {
+    console.log(authResetDto);
   }
 }
