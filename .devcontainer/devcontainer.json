@@ -1,0 +1,23 @@
+{
+  "name": "Nest Boilerplate",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "eamodio.gitlens"
+      ]
+    }
+  },
+  "forwardPorts": [3001],
+  "postCreateCommand": "yarn install && npx prisma generate",
+  "remoteUser": "node",
+  "containerUser": "node"
+}
