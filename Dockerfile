@@ -4,6 +4,8 @@ FROM node:20-alpine
 # Definir o diretório de trabalho
 WORKDIR /app
 
+RUN npm i -g @nestjs/cli
+
 # Copiar os arquivos de dependências
 COPY package*.json ./
 
