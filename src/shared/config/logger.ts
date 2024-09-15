@@ -1,9 +1,13 @@
 import pino from 'pino';
+import { ConfigService } from '@nestjs/config';
+import { envSchema } from '../infrastructure/env-config/env.schema';
+
+const configService = new ConfigService(envSchema.parse(process.env));
 
 const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: configService.get<string>('LOG_LEVEL') || 'info',
   transport:
-    process.env.NODE_ENV !== 'production'
+    configService.get<string>('NODE_ENV') !== 'production'
       ? {
           target: 'pino-pretty',
           options: {

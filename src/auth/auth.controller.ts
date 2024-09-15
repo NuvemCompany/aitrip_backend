@@ -13,10 +13,14 @@ import { Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { OAuthProvider } from './domain/types/oauth-provider.type';
 import { UserRequest } from './domain/interfaces/user-request.interface';
+import { AppConfigService } from 'src/shared/infrastructure/env-config/config.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly appConfigService: AppConfigService,
+  ) {}
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
@@ -55,7 +59,7 @@ export class AuthController {
 
     res.cookie('jwt', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: this.appConfigService.nodeEnv === 'production', // Usando AppConfigService para verificar ambiente
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000,
     });
@@ -84,7 +88,7 @@ export class AuthController {
     await this.authService.storeAuthCode(code, user);
 
     res.redirect(
-      `${process.env.FRONTEND_URL}${process.env.FRONTEND_LOGIN_CALLBACK_ENDPOINT}/${code}`,
+      `${this.appConfigService.frontendUrl}${this.appConfigService.frontendLoginCallbackEndpoint}/${code}`,
     );
   }
 }

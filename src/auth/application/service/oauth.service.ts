@@ -4,20 +4,22 @@ import { UserRepository } from '../../infrastructure/repository/user.repository'
 import { OAuthAccountRepository } from '../../infrastructure/repository/oauth-account.repository';
 import { User } from '@prisma/client';
 import Redis, { Redis as RedisClient } from 'ioredis';
+import { AppConfigService } from 'src/shared/infrastructure/env-config/config.service';
 
 @Injectable()
 export class AuthService {
-  // In-memory storage for auth codes
+  // Redis client
   private redisClient: RedisClient;
 
   constructor(
     private readonly userRepository: UserRepository,
     private readonly oauthAccountRepository: OAuthAccountRepository,
     private readonly jwtService: JwtService,
+    private readonly appConfigService: AppConfigService,
   ) {
     this.redisClient = new Redis({
-      host: process.env.REDIS_HOST || '127.0.0.1',
-      port: Number(process.env.REDIS_PORT) || 6379,
+      host: this.appConfigService.redisHost,
+      port: this.appConfigService.redisPort,
     });
   }
 

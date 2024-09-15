@@ -9,14 +9,21 @@ import { AuthController } from './auth.controller';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtStrategy } from './infrastructure/strategy/jwt.strategy';
 import { AuthService } from './application/service/oauth.service';
+import { AppConfigModule } from 'src/shared/infrastructure/env-config/config.module';
+import { AppConfigService } from 'src/shared/infrastructure/env-config/config.service';
 
 @Module({
   imports: [
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '7d' },
+    JwtModule.registerAsync({
+      imports: [AppConfigModule],
+      inject: [AppConfigService],
+      useFactory: (configService: AppConfigService) => ({
+        secret: configService.jwtSecret,
+        signOptions: { expiresIn: '7d' },
+      }),
     }),
+    AppConfigModule,
   ],
   controllers: [AuthController],
   providers: [
