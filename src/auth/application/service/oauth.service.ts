@@ -1,0 +1,96 @@
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { UserRepository } from '../../infrastructure/repository/user.repository';
+import { OAuthAccountRepository } from '../../infrastructure/repository/oauth-account.repository';
+import { User } from '@prisma/client';
+import Redis, { Redis as RedisClient } from 'ioredis';
+
+@Injectable()
+export class AuthService {
+  // In-memory storage for auth codes
+  private redisClient: RedisClient;
+
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly oauthAccountRepository: OAuthAccountRepository,
+    private readonly jwtService: JwtService,
+  ) {
+    this.redisClient = new Redis({
+      host: process.env.REDIS_HOST || '127.0.0.1',
+      port: Number(process.env.REDIS_PORT) || 6379,
+    });
+  }
+
+  async storeAuthCode(code: string, user: User): Promise<void> {
+    await this.redisClient.set(
+      `auth_code:${code}`,
+      JSON.stringify(user),
+      'EX',
+      5 * 60, // Expires in 5 minutes
+    );
+  }
+
+  // Function to retrieve user data by auth code
+  async getUserByAuthCode(code: string): Promise<User | null> {
+    const data = await this.redisClient.get(`auth_code:${code}`);
+
+    if (!data) {
+      return null;
+    }
+
+    // Optionally delete the code after retrieval
+    await this.redisClient.del(`auth_code:${code}`);
+
+    return JSON.parse(data);
+  }
+
+  async deleteAuthCode(code: string): Promise<void> {
+    await this.redisClient.del(`auth_code:${code}`);
+  }
+
+  // Existing method to validate OAuth login
+  async validateOAuthLogin(
+    provider: string,
+    providerUserId: string,
+    profile: any,
+  ): Promise<{ user: User; token: string }> {
+    let user = await this.userRepository.findByEmail(profile.email);
+
+    if (!user) {
+      user = await this.userRepository.create({
+        email: profile.email,
+        name: profile.name,
+        image: profile.picture,
+        emailVerifiedAt: new Date(),
+        password: '',
+      });
+
+      await this.oauthAccountRepository.create({
+        provider,
+        providerUserId,
+        accessToken: profile.accessToken,
+        refreshToken: profile.refreshToken,
+        user: {
+          connect: { id: user.id },
+        },
+      });
+    }
+
+    const token = await this.generateJwt(user);
+
+    return { user, token };
+  }
+
+  // Function to generate JWT
+  async generateJwt(user: User): Promise<string> {
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      name: user.name,
+      image: user.image,
+      tokenType: 'Bearer',
+      emailVerifiedAt: user.emailVerifiedAt,
+    };
+    return this.jwtService.sign(payload);
+  }
+}
