@@ -3,17 +3,18 @@ module.exports = {
   parserOptions: {
     project: 'tsconfig.json',
     tsconfigRootDir: __dirname,
-    sourceType: 'module',
+    sourceType: 'module'
   },
-  plugins: ['@typescript-eslint/eslint-plugin', 'import-helpers'],
+  plugins: ['@typescript-eslint/eslint-plugin', 'prettier', 'import-helpers'],
   extends: [
+    'prettier',
     'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended',
+    'plugin:prettier/recommended'
   ],
   root: true,
   env: {
     node: true,
-    jest: true,
+    jest: true
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
@@ -21,13 +22,7 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    'import-helpers/order-imports': [
-      'warn',
-      {
-        newlinesBetween: 'always',
-        groups: ['module', '/^@/', ['parent', 'sibling', 'index']],
-        alphabetize: { order: 'asc', ignoreCase: true },
-      },
-    ],
-  },
+    'import/no-unresolved': 'off',
+    'import/extensions': 'off'
+  }
 };
