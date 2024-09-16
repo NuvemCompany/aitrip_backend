@@ -26,6 +26,10 @@ export class AppConfigService {
     return this.envConfig.JWT_SECRET;
   }
 
+  get jwtExpiration(): string {
+    return this.envConfig.JTW_EXPIRES_IN;
+  }
+
   get frontendUrl(): string {
     return this.envConfig.FRONTEND_URL;
   }

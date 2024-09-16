@@ -4,6 +4,7 @@ export const envSchema = z.object({
   APP_PORT: z.string().transform((port) => parseInt(port, 10)),
   NODE_ENV: z.enum(['development', 'production', 'test']),
   JWT_SECRET: z.string(),
+  JTW_EXPIRES_IN: z.string(),
   FRONTEND_URL: z.string().url(),
   FRONTEND_LOGIN_CALLBACK_ENDPOINT: z.string(),
 
