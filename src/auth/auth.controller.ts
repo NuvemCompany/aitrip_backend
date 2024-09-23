@@ -22,18 +22,6 @@ export class AuthController {
     private readonly appConfigService: AppConfigService,
   ) {}
 
-  @Get('github')
-  @UseGuards(AuthGuard('github'))
-  async githubLogin() {
-    return null;
-  }
-
-  @Get('github/callback')
-  @UseGuards(AuthGuard('github'))
-  async githubLoginCallback(@Req() req: UserRequest, @Res() res: Response) {
-    await this.handleOAuthCallback('github', req, res);
-  }
-
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleLogin() {

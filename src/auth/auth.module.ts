@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { GithubOAuthStrategy } from './infrastructure/strategy/github-oauth.strategy';
 import { GoogleOAuthStrategy } from './infrastructure/strategy/google-oauth.strategy';
 import { UserRepository } from './infrastructure/repository/user.repository';
 import { OAuthAccountRepository } from './infrastructure/repository/oauth-account.repository';
@@ -29,11 +28,11 @@ import { AppConfigService } from 'src/shared/infrastructure/env-config/config.se
   providers: [
     AuthService,
     JwtStrategy,
-    GithubOAuthStrategy,
     GoogleOAuthStrategy,
     UserRepository,
     OAuthAccountRepository,
     PrismaService,
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}

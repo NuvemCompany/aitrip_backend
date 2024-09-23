@@ -5,6 +5,7 @@ import { OAuthAccountRepository } from '../../infrastructure/repository/oauth-ac
 import { User } from '@prisma/client';
 import Redis, { Redis as RedisClient } from 'ioredis';
 import { AppConfigService } from 'src/shared/infrastructure/env-config/config.service';
+import { UnauthorizedError } from 'src/common/errors/types/UnauthorizedError';
 
 @Injectable()
 export class AuthService {
@@ -94,5 +95,25 @@ export class AuthService {
       emailVerifiedAt: user.emailVerifiedAt,
     };
     return this.jwtService.sign(payload);
+  }
+
+  checkToken(token: string) {
+    try {
+      const tokenData = this.jwtService.verify(token, {
+        ignoreExpiration: false,
+      });
+      return tokenData;
+    } catch (error) {
+      throw new UnauthorizedError(error.message);
+    }
+  }
+
+  isValidToken(token: string) {
+    try {
+      this.jwtService.verify(token);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
