@@ -1,29 +1,16 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 model User {
   id           String           @id @default(cuid())
   email        String           @unique
   name         String?
+  lastName     String?
   image        String?
   emailVerifiedAt DateTime?
   password     String?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
   accounts     OAuthAccount[]    @relation("UserOAuthAccounts")
+  addresses    UserAddress[]
+  preferences  UserPreferences?
 }
 
 model OAuthAccount {
@@ -36,6 +23,71 @@ model OAuthAccount {
   user           User       @relation("UserOAuthAccounts", fields: [userId], references: [id])
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
-
   @@unique([provider, providerUserId])
+}
+
+model UserAddress{
+  id           String           @id @default(cuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id])
+  address      String
+  city         String
+  state        String
+  country      String
+  postalCode   String
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model UserPreferences {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String @unique
+  categories  LocationCategory[]
+  accommodationType LocationType
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  latitude    Float
+  longitude   Float
+  city        String
+  state       String
+  country     String
+  type        LocationType
+  category    LocationCategory @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([latitude, longitude])
+  Accommodation Accommodation[]
+}
+
+model LocationCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  locations Location[]
+
+  UserPreferences UserPreferences[]
+}
+
+model Accommodation {
+  id          String   @id @default(cuid())
+  location    Location @relation(fields: [locationId], references: [id])
+  locationId  String
+  pricePerNight Float
+  rating      Float
+  available   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum LocationType {
+  VISIT
+  STAY
 }
